@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:8.0
+    ports:
+      - '3306:3306'
+    environment:
+       MYSQL_DATABASE: 'sightings'
+       MYSQL_USER: 'root'
+       MYSQL_PASSWORD: 'root'
+       MYSQL_ROOT_PASSWORD: 'root'
+ web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/ufo_hotspots
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  mysqldb:
+    image: mysql:8.0
+    container_name: mysqldb
+    command: mysqld --user=root --verbose
+    volumes:
+       - ./schemadump.sql:/docker-entrypoint-initdb.d/schemadump.sql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: "sightings"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "root"
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+  sightings:
+    image: "doldroyd/ufo-sighting:firstload"
+    environment:
+      ENDPOINT: http://web:5000/sighting
